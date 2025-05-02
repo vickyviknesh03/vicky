@@ -2,78 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multilingual Speech Recognition</title>
+  <title>🎙️ Multilingual Speech to English</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh;
+      background: url('https://source.unsplash.com/1600x900/?language,translation') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    #result {
+
+    .container {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 30px 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1em;
+      border-radius: 8px;
+      border: none;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #translatedText {
       margin-top: 20px;
       font-size: 1.2em;
+      color: #222;
     }
-    button {
+
+    .status {
       margin-top: 10px;
-      padding: 10px 20px;
       font-size: 1em;
-    }
-    select {
-      padding: 8px;
-      font-size: 1em;
+      color: #555;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h1>🌍 Speak & Translate to English</h1>
 
-  <h1>🎤 Multilingual Speech Recognition</h1>
+    <label for="language">🎙️ Choose Language:</label>
+    <select id="language">
+      <option value="ta-IN">Tamil</option>
+      <option value="ml-IN">Malayalam</option>
+      <option value="hi-IN">Hindi</option>
+      <option value="fr-FR">French</option>
+      <option value="zh-CN">Chinese (Mandarin)</option>
+    </select>
 
-  <label for="language">Choose Language:</label>
-  <select id="language">
-  <option value="en-US">English (US)</option>
-  <option value="ta-IN">Tamil (India)</option>
-  <option value="hi-IN">Hindi (India)</option>
-  <option value="ml-IN">Malayalam (India)</option>
-  <option value="fr-FR">French (France)</option>
-  <option value="de-DE">German (Germany)</option>
-  <option value="es-ES">Spanish (Spain)</option>
-  <option value="zh-CN">Chinese (Mandarin)</option>
-</select>
+    <button onclick="startRecognition()">🎤 Start Speaking</button>
 
+    <div class="status" id="statusMsg">Waiting for input...</div>
 
-  <br><br>
-  <button onclick="startRecognition()">Start Listening</button>
-
-  <div id="result">📝 Result will appear here...</div>
-  <div id="language-detected"></div>
+    <h2>📝 English Translation:</h2>
+    <p id="translatedText">---</p>
+  </div>
 
   <script>
+    const translatedText = document.getElementById("translatedText");
+    const statusMsg = document.getElementById("statusMsg");
+
     function startRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        alert("❌ Speech Recognition API not supported in this browser.");
+        alert("❌ Your browser does not support Speech Recognition.");
         return;
       }
 
-      const selectedLang = document.getElementById("language").value;
       const recognition = new SpeechRecognition();
-      recognition.lang = selectedLang;
+      recognition.lang = document.getElementById("language").value;
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
-      document.getElementById("result").innerText = "🎙 Listening...";
+      statusMsg.textContent = "🎧 Listening...";
 
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById("result").innerText = "✅ You said: " + transcript;
+      recognition.onresult = async function(event) {
+        const speechResult = event.results[0][0].transcript;
+        statusMsg.textContent = "🧠 Translating...";
+        const translated = await translateToEnglish(speechResult, recognition.lang);
+        translatedText.textContent = translated;
+        statusMsg.textContent = "✅ Done!";
       };
 
-      recognition.onerror = (event) => {
-        document.getElementById("result").innerText = "❌ Error: " + event.error;
+      recognition.onerror = function(event) {
+        statusMsg.textContent = "❌ Error: " + event.error;
+        translatedText.textContent = "---";
       };
 
       recognition.start();
     }
-  </script>
 
+    async function translateToEnglish(text, sourceLang) {
+      const langCode = sourceLang.split('-')[0];
+      try {
+        const res = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + langCode + "&tl=en&dt=t&q=" + encodeURIComponent(text));
+        const data = await res.json();
+        return data[0].map(x => x[0]).join('');
+      } catch (err) {
+        return "⚠️ Translation failed.";
+      }
+    }
+  </script>
 </body>
 </html>
