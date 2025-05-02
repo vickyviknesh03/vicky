@@ -80,13 +80,19 @@
 
     <div class="status" id="statusMsg">Waiting for input...</div>
 
+    <h2>Original Speech (<span id="languageName">---</span>):</h2>
+    <p id="originalText">---</p>
+
     <h2>📝 English Translation:</h2>
     <p id="translatedText">---</p>
   </div>
 
   <script>
+    const originalText = document.getElementById("originalText");
     const translatedText = document.getElementById("translatedText");
     const statusMsg = document.getElementById("statusMsg");
+    const languageName = document.getElementById("languageName");
+    const languageSelect = document.getElementById("language");
 
     function startRecognition() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -96,7 +102,12 @@
       }
 
       const recognition = new SpeechRecognition();
-      recognition.lang = document.getElementById("language").value;
+      const selectedOption = languageSelect.options[languageSelect.selectedIndex];
+      const selectedLangCode = selectedOption.value;
+      const selectedLangName = selectedOption.text;
+
+      languageName.textContent = selectedLangName;
+      recognition.lang = selectedLangCode;
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
@@ -104,14 +115,16 @@
 
       recognition.onresult = async function(event) {
         const speechResult = event.results[0][0].transcript;
+        originalText.textContent = speechResult;
         statusMsg.textContent = "🧠 Translating...";
-        const translated = await translateToEnglish(speechResult, recognition.lang);
+        const translated = await translateToEnglish(speechResult, selectedLangCode);
         translatedText.textContent = translated;
         statusMsg.textContent = "✅ Done!";
       };
 
       recognition.onerror = function(event) {
         statusMsg.textContent = "❌ Error: " + event.error;
+        originalText.textContent = "---";
         translatedText.textContent = "---";
       };
 
