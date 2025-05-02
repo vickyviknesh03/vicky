@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multilingual Speech Recognition</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+    select {
+      padding: 8px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎤 Multilingual Speech Recognition</h1>
+
+  <label for="language">Choose Language:</label>
+  <select id="language">
+  <option value="en-US">English (US)</option>
+  <option value="ta-IN">Tamil (India)</option>
+  <option value="hi-IN">Hindi (India)</option>
+  <option value="ml-IN">Malayalam (India)</option>
+  <option value="fr-FR">French (France)</option>
+  <option value="de-DE">German (Germany)</option>
+  <option value="es-ES">Spanish (Spain)</option>
+  <option value="zh-CN">Chinese (Mandarin)</option>
+</select>
+
+
+  <br><br>
+  <button onclick="startRecognition()">Start Listening</button>
+
+  <div id="result">📝 Result will appear here...</div>
+  <div id="language-detected"></div>
+
+  <script>
+    function startRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("❌ Speech Recognition API not supported in this browser.");
+        return;
+      }
+
+      const selectedLang = document.getElementById("language").value;
+      const recognition = new SpeechRecognition();
+      recognition.lang = selectedLang;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      document.getElementById("result").innerText = "🎙 Listening...";
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("result").innerText = "✅ You said: " + transcript;
+      };
+
+      recognition.onerror = (event) => {
+        document.getElementById("result").innerText = "❌ Error: " + event.error;
+      };
+
+      recognition.start();
+    }
+  </script>
+
+</body>
+</html>
